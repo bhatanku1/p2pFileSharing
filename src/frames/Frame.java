@@ -1,5 +1,7 @@
 package frames;
 
-public abstract class Frame {
+import java.io.Serializable;
+
+public abstract class Frame implements Serializable {
 	public abstract int type();
 }

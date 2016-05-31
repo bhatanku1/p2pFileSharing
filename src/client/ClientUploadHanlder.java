@@ -4,6 +4,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
+import fileOperation.FileManager;
 import frames.DataRequest;
 /**
  * 
@@ -16,6 +17,7 @@ public class ClientUploadHanlder {
 	private long length;
 	private final String fileName;
 	private final int port;
+	private final FileManager fileManager;
 	private final DataRequest dataRequest;
 	private DatagramSocket datagramSocket;
 	private DatagramPacket datagramPacket;
@@ -39,9 +41,13 @@ public class ClientUploadHanlder {
 		this.datagramPacket = datagramPacket;
 		this.port = port;
 		this.inetAddress = inetAddress;
+		this.fileManager = new FileManager(fileName);
 	}
 	
 	public void uploadProcess(){
+		
+		
+		
 		
 		
 	}

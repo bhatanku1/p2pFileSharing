@@ -36,6 +36,21 @@ public class UploadRequest extends Frame {
 	}
 
 
+	public String getFileName() {
+		return fileName;
+	}
+
+
+	public byte[] getSha1() {
+		return sha1;
+	}
+
+
+	public long getSize() {
+		return size;
+	}
+
+
 	@Override
 	public String toString() {
 		return "UploadRequest [fileName=" + fileName + ", sha1="
