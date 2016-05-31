@@ -274,4 +274,10 @@ public class FileManager implements IFileFacade {
 
         return splittedFileName[splittedFileName.length -1];
     }
+
+	@Override
+	public void fileClose() {
+		// TODO Auto-generated method stub
+		
+	}
 }

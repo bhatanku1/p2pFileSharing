@@ -16,4 +16,5 @@ public interface IFileFacade {
     public boolean fileExits();
     public String getFileName();
     public boolean deleteFile();
+    public void fileClose();
 }
