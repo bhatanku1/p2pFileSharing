@@ -26,6 +26,27 @@ public class UploadResponse extends Frame {
 		this.port = port;
 		this.identifier = identifier;
 	}
+	/**
+	 * 
+	 * @return status
+	 */
+	public int getStatus() {
+		return status;
+	}
+	/**
+	 * 
+	 * @return port that will be used for the data connection
+	 */
+	public int getPort() {
+		return port;
+	}
+	/**
+	 * 
+	 * @return identifier used for the session
+	 */
+	public int getIdentifier() {
+		return identifier;
+	}
 
 	@Override
 	public String toString() {
