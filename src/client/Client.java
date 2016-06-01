@@ -75,6 +75,8 @@ public class Client {
 	 * @throws IOException
 	 */
 	private DataRequest checkResponseFromServer() throws IOException {
+		LOGGER.info("Waiting for DataRequest from the server");
+
 		Object o;
 		byte[] dataRequest = new byte[280];
 		Deframer deframer = new Deframer();
@@ -96,9 +98,13 @@ public class Client {
 	 * @throws IOException
 	 */
 	private void sendPacketToServer(byte[] payload) throws IOException {
+		LOGGER.info("Sending UploadRequest to the server");
+
 		datagramSocket = new DatagramSocket();
 		datagramPacket = new DatagramPacket(payload, payload.length, SERVERADDRESS, SERVERPORT);
 		datagramSocket.send(datagramPacket);
+		LOGGER.info(" UploadRequest sent to the server");
+
 	}
 	
 	/**
