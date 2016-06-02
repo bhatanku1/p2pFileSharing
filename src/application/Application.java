@@ -25,7 +25,7 @@ public class Application {
 	   if(args[0].equals("server")){
 			//start server
 		   LOGGER.info("Starting server");
-		   Server server = new Server(2520);
+		   Server server = new Server(25200);
 		   server.listenToClients();
 		}
 	   if(args[0].equals("client")) {
@@ -33,8 +33,8 @@ public class Application {
 
 		   //start client
 			try {
-				address = InetAddress.getLocalHost();
-				   Client client = new Client(address, 2520, "C:\\Users\\ankur\\test.txt");
+				address = InetAddress.getByName("192.168.1.231");
+				   Client client = new Client(address, 25200, "C:\\Users\\ankur\\test.txt");
 					client.pftUpload();
 
 			} catch (UnknownHostException e1) {
