@@ -1,8 +1,9 @@
 package server;
 
 public interface ConfigInterface {
-	public void updataConfigFile(long offset, byte[] sha1);
-	public void deleteConfigFile(String fileName);
-	public long getOffset(String fileName);
-	public byte[] getSha(String fileName);
+	public void updataConfigFile(long offset);
+	public void deleteConfigFile();
+	public long getOffset();
+	public byte[] getSha();
+	public long getSize();
 }
