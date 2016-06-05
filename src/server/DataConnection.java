@@ -1,7 +1,17 @@
 package server;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
+import java.util.LinkedList;
+import java.util.List;
+
+import marshallDemarshall.Deframer;
+import marshallDemarshall.Framer;
+import fileOperation.FileManager;
+import frames.DataRequest;
 
 public class DataConnection {
 	private String fileName;
@@ -12,6 +22,8 @@ public class DataConnection {
 	private DatagramSocket datagramSocket;
 	private ConfigFile configFile;
 	private final int identifier;
+	FileManager fileManager;
+	
 	public DataConnection(String fileName, byte[] sha, long size, int clientPort, InetAddress clientAddress) {
 		this.fileName = fileName;
 		this.sha = sha;
@@ -19,6 +31,13 @@ public class DataConnection {
 		this.clientAddress = clientAddress;
 		this.clientPort = clientPort;
 		configFile = new ConfigFile(fileName, sha, size);
+		fileManager = new FileManager(fileName);
+		try {
+			datagramSocket = new DatagramSocket();
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		identifier = 252; //TODO Change it to get some random value
 	}
 	
@@ -29,6 +48,7 @@ public class DataConnection {
 		long offsetForDataRequest;
 		long lengthForDataRequest;
 		boolean isCycleOver;
+		List<byte[]> listDataResponse;
 		long[] parametersOffsetAndLength = new long[2];
 		int [] packetTracker = new int[] {1,1,1,1};
 		currentOffset = configFile.getOffset();
@@ -36,14 +56,15 @@ public class DataConnection {
 			lengthForDataRequest = getLengthBasedOnSize(currentOffset);
 			packetTracker = setPacketTracker(lengthForDataRequest);
 			sendDataRequest(currentOffset, lengthForDataRequest, identifier);
-			receiveDataResponse(lengthForDataRequest);
-			packetTracker = writeDataToFile(packetTracker);
+			listDataResponse = receiveDataResponse(lengthForDataRequest);
+			packetTracker = writeDataToFile(packetTracker, listDataResponse);
 			isCycleOver = CheckPacketTracker(packetTracker);
 			while(!isCycleOver){
 				parametersOffsetAndLength = getOffsetAndLength(packetTracker);
 				sendDataRequest(parametersOffsetAndLength[0], parametersOffsetAndLength[1], identifier);
-				receiveDataResponse(parametersOffsetAndLength[1]);
-				packetTracker = writeDataToFile(packetTracker);
+				listDataResponse = receiveDataResponse(parametersOffsetAndLength[1]);
+				packetTracker = writeDataToFile(packetTracker, listDataResponse);
+				isCycleOver = CheckPacketTracker(packetTracker);
 			}	
 			configFile.updataConfigFile(currentOffset + lengthForDataRequest);
 			currentOffset = configFile.getOffset();
@@ -124,17 +145,47 @@ public class DataConnection {
 		return offsetAndLength;
 	}
 	
-	private int[] writeDataToFile(int[] packetTracker) {
+	private int[] writeDataToFile(int[] packetTracker, List<byte[]> listDataResponse) {
+		byte[] dataResponsePacket;
+		byte[] dataForFile;
+		long offset;
+		long length;
+		Deframer deframer = new Deframer();
+		//TODO : implementation of the write function
 		return packetTracker;
-		// TODO Auto-generated method stub
 		
 	}
-	private void receiveDataResponse(long lengthForDataRequest) {
-		// TODO Auto-generated method stub
+	private List<byte[]> receiveDataResponse(long lengthForDataRequest) {
+		byte[] dataResponse = new byte[4106];
+		int loopcounter = (int) lengthForDataRequest/4096;
+		if(loopcounter == 0) loopcounter = 1;
+		DatagramPacket datagramPacket = new DatagramPacket(dataResponse, dataResponse.length);
+		List<byte[]> listDataResponse = new LinkedList<>();
+		for (int i = 0; i< loopcounter; i++){
+			try {
+				datagramSocket.receive(datagramPacket);
+				listDataResponse.add(dataResponse);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		return listDataResponse;
 		
 	}
 	private void sendDataRequest(long offsetForDataRequest, long lengthForDataRequest, int identifier) {
-		// TODO Auto-generated method stub
+		DataRequest dataRequest = new DataRequest(offsetForDataRequest, lengthForDataRequest, identifier);
+		Framer framer = new Framer();
+		byte [] dataRequestPayload;
+		dataRequestPayload = framer.framer(dataRequest);
+		DatagramPacket datagramPacket = new DatagramPacket(dataRequestPayload, dataRequestPayload.length, clientAddress, clientPort);
+		try {
+			datagramSocket.send(datagramPacket);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
 		
 	}
 	

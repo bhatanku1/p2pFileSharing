@@ -63,9 +63,7 @@ public class Client {
 		sendPacketToServer(uploadRequestPayload);
 		dataRequest = checkResponseFromServer();
 		checkNotNull(dataRequest);
-		if(dataRequest.getStatus() == 1){
-			//start the client Upload Handler
-		}
+		
 		
 	}
 	/**
