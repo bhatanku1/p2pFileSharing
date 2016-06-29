@@ -1,5 +1,6 @@
 package server;
 
+import java.awt.Frame;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -18,6 +19,7 @@ public class Server {
 	private Object object;
 	private byte[] request;
 	private boolean isValid;
+	private UploadRequest uploadRequest;
 	private String command; // needs to be replaced with enum
 	
 	
@@ -39,11 +41,11 @@ public class Server {
 			try {
 				datagramSocket.receive(datagramPacket);
 				LOGGER.info("Recieved reques from client");
-				isValid = verifyPacket(request);
-				if(isValid == true) {
+				uploadRequest = verifyPacket(request);
+				if(uploadRequest != null) {
 					// Initiate a new dataConnection for the client and send the response
-					LOGGER.info("Request type: " + command);
-					newDataConnection();
+					LOGGER.info("Request type: " + uploadRequest.type());
+					newDataConnection(uploadRequest);
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -51,21 +53,22 @@ public class Server {
 			}
 		}
 	}
-	private void newDataConnection() {
+	private void newDataConnection(UploadRequest uploadRequest) {
 		LOGGER.info("Client request received from port: " + datagramPacket.getPort() + "A new data connection started for client");
+		DataConnection dataConnection = new DataConnection(uploadRequest.getFileName(), uploadRequest.getSha1(), uploadRequest.getSize(), datagramPacket.getPort(), datagramPacket.getAddress());
 		
 	}
-	private boolean verifyPacket(byte[] request) {
+	private UploadRequest verifyPacket(byte[] request) {
 		Deframer deframer = new Deframer();
 		object = deframer.deframer(request);
 		if (object instanceof DownloadRequest) {
 			command = "downloadRequest"; // to be replaced with enum
-			return true;
+			return null;
 		}
 		else if (object instanceof UploadRequest) {
 			command = "uploadRequest";
-			return true;
+			return (UploadRequest) object;
 		}
-		else return false;
+		else return null;
 	}
 }

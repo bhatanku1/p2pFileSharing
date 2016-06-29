@@ -167,7 +167,7 @@ public class DataConnection {
 		
 	}
 	private List<byte[]> receiveDataResponse(long lengthForDataRequest) {
-		byte[] dataResponse = new byte[4106];
+		byte[] dataResponse = new byte[4249];
 		int loopcounter = (int) lengthForDataRequest/4096;
 		if(loopcounter == 0) loopcounter = 1;
 		DatagramPacket datagramPacket = new DatagramPacket(dataResponse, dataResponse.length);

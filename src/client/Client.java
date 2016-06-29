@@ -64,8 +64,8 @@ public class Client {
 		sendPacketToServer(uploadRequestPayload);
 		dataRequest = checkResponseFromServer();
 		checkNotNull(dataRequest);
-		ClientUploadHanlder clientUploadHanlder = new ClientUploadHanlder(dataRequest.getOffset(), dataRequest.getLength(), fileName, dataPort, dataRequest, SERVERADDRESS, datagramSocket);
-		clientUploadHanlder.uploadProcess();
+//		ClientUploadHanlder clientUploadHanlder = new ClientUploadHanlder(dataRequest.getOffset(), dataRequest.getLength(), fileName, dataPort, dataRequest, SERVERADDRESS, datagramSocket);
+//		clientUploadHanlder.uploadProcess();
 		
 		
 	}
@@ -86,6 +86,8 @@ public class Client {
 		dataPort = datagramPacket.getPort();
 		o = deframer.deframer(dataRequest);
 		if (o instanceof DataRequest){
+			LOGGER.info("Received a DataRequest from the server");
+
 			return (DataRequest) o;	
 		}
 		
