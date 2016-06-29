@@ -51,10 +51,11 @@ public class Client {
 	
 	/**
 	 * 
+	 * @return 
 	 * @throws IOException
 	 * The function initiates the progressive upload
 	 */
-	public void pftUpload() throws IOException{
+	public  void pftUpload() throws IOException{
 		byte [] uploadRequestPayload;
 		DataRequest dataRequest;
 		uploadRequestPayload = generateUploadRequest();
@@ -63,6 +64,8 @@ public class Client {
 		sendPacketToServer(uploadRequestPayload);
 		dataRequest = checkResponseFromServer();
 		checkNotNull(dataRequest);
+		ClientUploadHanlder clientUploadHanlder = new ClientUploadHanlder(dataRequest.getOffset(), dataRequest.getLength(), fileName, dataPort, dataRequest, SERVERADDRESS, datagramSocket);
+		clientUploadHanlder.uploadProcess();
 		
 		
 	}

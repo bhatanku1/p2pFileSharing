@@ -12,6 +12,7 @@ import marshallDemarshall.Deframer;
 import marshallDemarshall.Framer;
 import fileOperation.FileManager;
 import frames.DataRequest;
+import frames.DataResponse;
 
 public class DataConnection {
 	private String fileName;
@@ -148,10 +149,14 @@ public class DataConnection {
 	private int[] writeDataToFile(int[] packetTracker, List<byte[]> listDataResponse) {
 		byte[] dataResponsePacket;
 		byte[] dataForFile;
+		DataResponse dataResponse;
+		Object o;
 		long offset;
 		long length;
 		Deframer deframer = new Deframer();
-		//TODO : implementation of the write function
+		for(int i = 0; i<listDataResponse.size(); i++) {
+			
+		}
 		return packetTracker;
 		
 	}

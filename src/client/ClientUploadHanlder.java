@@ -17,8 +17,8 @@ import frames.DataResponse;
  *
  */
 public class ClientUploadHanlder {
-	private int offset;
-	private int length;
+	private long offset;
+	private long length;
 	private final String fileName;
 	private final int port;
 	private final int identifier;
@@ -38,7 +38,7 @@ public class ClientUploadHanlder {
 	 * @param inetAddress
 	 * @param datagramSocket
 	 */
-	public ClientUploadHanlder(int offset, int length, String fileName,	int port, DataRequest dataRequest, InetAddress inetAddress, DatagramSocket datagramSocket) {
+	public ClientUploadHanlder(long offset, long length, String fileName,	int port, DataRequest dataRequest, InetAddress inetAddress, DatagramSocket datagramSocket) {
 		this.offset = offset;
 		this.length = length;
 		this.fileName = fileName;
@@ -70,10 +70,10 @@ public class ClientUploadHanlder {
 			 * followed by another request of offset 8192, length 3 
 			 */
 			readBytesFromFile = 4096;
-			numberOfPacketsToSend = length/4096;
+			numberOfPacketsToSend = (int) (length/4096);
 			if(numberOfPacketsToSend == 0) {
 				numberOfPacketsToSend = 1;
-				readBytesFromFile = length;
+				readBytesFromFile = (int) length;
 			}
 			
 			for(int i = 0; i< numberOfPacketsToSend; i++){
@@ -83,7 +83,7 @@ public class ClientUploadHanlder {
 				 * 3. send the packet to the server
 				 * 4. increase the offset by the number of bytes read
 				 */
-				dataToSend = fileManager.readFromPosition(offset, readBytesFromFile);
+				dataToSend = fileManager.readFromPosition((int) offset, readBytesFromFile);
 				payloadToSendToServer = generateDataResponsePacket(dataToSend);
 				try {
 					sendPacketToServer(payloadToSendToServer);

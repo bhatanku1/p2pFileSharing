@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 
 import server.Server;
 import client.Client;
+import client.ClientUploadHanlder;
+import frames.DataRequest;
 
 public class Application {
 	private final static Logger LOGGER = Logger.getLogger(Application.class.getName()); 
@@ -16,7 +18,6 @@ public class Application {
 
 		InetAddress address;
 		
-
 
 		if(args.length < 1) {
 			   LOGGER.info("Error in command");
@@ -35,7 +36,8 @@ public class Application {
 			try {
 				address = InetAddress.getByName("192.168.1.231");
 				   Client client = new Client(address, 25200, "C:\\Users\\ankur\\test.txt");
-					client.pftUpload();
+				   client.pftUpload();
+				   
 
 			} catch (UnknownHostException e1) {
 				// TODO Auto-generated catch block
