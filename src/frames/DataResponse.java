@@ -39,6 +39,26 @@ public class DataResponse extends Frame {
 				+ identifier + "]";
 	}
 
+	public long getOffset() {
+		return offset;
+	}
+
+
+	public long getLength() {
+		return length;
+	}
+
+
+	public byte[] getData() {
+		return data;
+	}
+
+
+	public int getIdentifier() {
+		return identifier;
+	}
+
+
 	/**
 	 * @return 6
 	 */

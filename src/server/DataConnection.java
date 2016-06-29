@@ -58,13 +58,13 @@ public class DataConnection {
 			packetTracker = setPacketTracker(lengthForDataRequest);
 			sendDataRequest(currentOffset, lengthForDataRequest, identifier);
 			listDataResponse = receiveDataResponse(lengthForDataRequest);
-			packetTracker = writeDataToFile(packetTracker, listDataResponse);
+			packetTracker = writeDataToFile(packetTracker, listDataResponse, currentOffset);
 			isCycleOver = CheckPacketTracker(packetTracker);
 			while(!isCycleOver){
 				parametersOffsetAndLength = getOffsetAndLength(packetTracker);
 				sendDataRequest(parametersOffsetAndLength[0], parametersOffsetAndLength[1], identifier);
 				listDataResponse = receiveDataResponse(parametersOffsetAndLength[1]);
-				packetTracker = writeDataToFile(packetTracker, listDataResponse);
+				packetTracker = writeDataToFile(packetTracker, listDataResponse, currentOffset);
 				isCycleOver = CheckPacketTracker(packetTracker);
 			}	
 			configFile.updataConfigFile(currentOffset + lengthForDataRequest);
@@ -146,18 +146,24 @@ public class DataConnection {
 		return offsetAndLength;
 	}
 	
-	private int[] writeDataToFile(int[] packetTracker, List<byte[]> listDataResponse) {
-		byte[] dataResponsePacket;
+	private int[] writeDataToFile(int[] packetTracker, List<byte[]> listDataResponse, long currentOffset) {
 		byte[] dataForFile;
 		DataResponse dataResponse;
 		Object o;
 		long offset;
 		long length;
+		int[] packetTracker1 = packetTracker;
 		Deframer deframer = new Deframer();
 		for(int i = 0; i<listDataResponse.size(); i++) {
+			dataResponse = (DataResponse) deframer.deframer(listDataResponse.remove(0));
+			offset = dataResponse.getOffset();
+			dataForFile = dataResponse.getData();
+			length = dataResponse.getLength();
+			fileManager.writeFromPosition(offset, length, dataForFile);
+			packetTracker1[(int) ((offset - currentOffset)/4096)] = 1;
 			
 		}
-		return packetTracker;
+		return packetTracker1;
 		
 	}
 	private List<byte[]> receiveDataResponse(long lengthForDataRequest) {

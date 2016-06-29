@@ -11,7 +11,7 @@ import client.Client;
 import client.ClientUploadHanlder;
 import frames.DataRequest;
 
-public class Application {
+public class ServerTemp {
 	private final static Logger LOGGER = Logger.getLogger(Application.class.getName()); 
 
 	public static void main(String[] args){
