@@ -1,9 +1,11 @@
 package client;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.logging.Logger;
 
 import marshallDemarshall.Deframer;
 import marshallDemarshall.Framer;
@@ -27,7 +29,8 @@ public class ClientUploadHanlder {
 	private DatagramSocket datagramSocket;
 	private DatagramPacket datagramPacket;
 	private final InetAddress inetAddress;
-	
+	private final static Logger LOGGER = Logger.getLogger(ClientUploadHanlder.class.getName()); 
+
 	/**
 	 * ClientUploadHanlder Constructor
 	 * @param offset
@@ -38,7 +41,7 @@ public class ClientUploadHanlder {
 	 * @param inetAddress
 	 * @param datagramSocket
 	 */
-	public ClientUploadHanlder(long offset, long length, String fileName,	int port, DataRequest dataRequest, InetAddress inetAddress, DatagramSocket datagramSocket) {
+	public ClientUploadHanlder(long offset, long length, String fileName,	int port, DataRequest dataRequest, InetAddress inetAddress, DatagramSocket datagramSocket)  {
 		this.offset = offset;
 		this.length = length;
 		this.fileName = fileName;
@@ -46,6 +49,7 @@ public class ClientUploadHanlder {
 		this.port = port;
 		this.inetAddress = inetAddress;
 		this.fileManager = new FileManager(fileName);
+		
 		this.datagramSocket = datagramSocket;
 		this.identifier = dataRequest.getIdentifier();
 	}
@@ -134,8 +138,10 @@ public class ClientUploadHanlder {
 			if(!(identifier == dataRequest.getIdentifier())) {
 				return false;
 			}
-			length = (int) dataRequest.getLength();
-			offset = (int)dataRequest.getOffset();
+			length =  dataRequest.getLength();
+			offset = dataRequest.getOffset();
+			LOGGER.info("Received dataRequestFrom Server: Offset: " + offset + "  Length: " + length);
+
 			return true;
 		}
 		else
@@ -152,6 +158,7 @@ public class ClientUploadHanlder {
 	 * @throws IOException
 	 */
 	private void sendPacketToServer(byte[] payloadToSendToServer) throws IOException {
+		LOGGER.info("Sending DataResponsePacket to the server: " + payloadToSendToServer.length);
 		datagramPacket = new DatagramPacket(payloadToSendToServer, payloadToSendToServer.length, inetAddress, port);
 		datagramSocket.send(datagramPacket);
 	}
@@ -165,8 +172,9 @@ public class ClientUploadHanlder {
 	private byte[] generateDataResponsePacket(byte[] dataToSend) {
 		byte[] payloadToSend = new byte[4106];
 		Framer framer = new Framer();
-		DataResponse dataResponse = new DataResponse(offset, length, dataToSend, identifier);
+		DataResponse dataResponse = new DataResponse(offset, dataToSend.length, dataToSend, identifier);
 		payloadToSend = framer.framer(dataResponse);
+		LOGGER.info("Sending dataresponse for offset:" + offset + " : length " + dataToSend.length);
 		return payloadToSend;
 		
 	}

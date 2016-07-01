@@ -5,8 +5,11 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
 import marshallDemarshall.Deframer;
 import marshallDemarshall.Framer;
@@ -24,15 +27,16 @@ public class DataConnection {
 	private ConfigFile configFile;
 	private final int identifier;
 	FileManager fileManager;
-	
+	private final static Logger LOGGER = Logger.getLogger(DataConnection.class.getName()); 
+
 	public DataConnection(String fileName, byte[] sha, long size, int clientPort, InetAddress clientAddress) {
 		this.fileName = fileName;
 		this.sha = sha;
 		this.size = size;
 		this.clientAddress = clientAddress;
 		this.clientPort = clientPort;
-		configFile = new ConfigFile(fileName, sha, size);
-		fileManager = new FileManager(fileName);
+		configFile = new ConfigFile(fileName + ".pft", sha, size);
+		fileManager = new FileManager(fileName + ".temp");
 		try {
 			datagramSocket = new DatagramSocket();
 		} catch (SocketException e) {
@@ -53,20 +57,26 @@ public class DataConnection {
 		long[] parametersOffsetAndLength = new long[2];
 		int [] packetTracker = new int[] {1,1,1,1};
 		currentOffset = configFile.getOffset();
+		LOGGER.info("The current offset is: " + currentOffset);
 		while(currentOffset < size){
 			lengthForDataRequest = getLengthBasedOnSize(currentOffset);
 			packetTracker = setPacketTracker(lengthForDataRequest);
+			LOGGER.info("PacketTracker set to: " + packetTracker);
 			sendDataRequest(currentOffset, lengthForDataRequest, identifier);
+			
 			listDataResponse = receiveDataResponse(lengthForDataRequest);
+			
 			packetTracker = writeDataToFile(packetTracker, listDataResponse, currentOffset);
 			isCycleOver = CheckPacketTracker(packetTracker);
 			while(!isCycleOver){
+				LOGGER.info("Some packets missed for offset: " + currentOffset);
 				parametersOffsetAndLength = getOffsetAndLength(packetTracker);
 				sendDataRequest(parametersOffsetAndLength[0], parametersOffsetAndLength[1], identifier);
 				listDataResponse = receiveDataResponse(parametersOffsetAndLength[1]);
 				packetTracker = writeDataToFile(packetTracker, listDataResponse, currentOffset);
 				isCycleOver = CheckPacketTracker(packetTracker);
 			}	
+			LOGGER.info("Received all packets for offset:" + currentOffset + " and length: " + lengthForDataRequest);
 			configFile.updataConfigFile(currentOffset + lengthForDataRequest);
 			currentOffset = configFile.getOffset();
 
@@ -104,13 +114,25 @@ public class DataConnection {
 	private long getLengthBasedOnSize(long currentOffset) {
 		long bytesToBeReceived = size - currentOffset;
 		int value = (int) (bytesToBeReceived/4096);
+		LOGGER.info("getLengthBasedOnSize: Length based on the size and offset:");
 		switch(value){
-		case 0: return bytesToBeReceived;
-		case 1: return 4096;
-		case 2: return 4096*2;
-		case 3: return 4096*3;
+		case 0: 
+				
+				LOGGER.info("Length: " + bytesToBeReceived);
+				return bytesToBeReceived;
+		case 1: 				
+				LOGGER.info("Length: " + 4096);
+				return 4096;
+		case 2:
+        		LOGGER.info("Length: " + 8192);
+				return 4096*2;
+		case 3: 
+				LOGGER.info("Length: " + 12288);
+				return 4096*3;
 		case 4:
-		default: return 4096*4;
+		default:
+				LOGGER.info("Length: " + 16384);
+				return 4096*4;
 		}
 		// TODO Auto-generated method stub
 	}
@@ -154,12 +176,16 @@ public class DataConnection {
 		long length;
 		int[] packetTracker1 = packetTracker;
 		Deframer deframer = new Deframer();
-		for(int i = 0; i<listDataResponse.size(); i++) {
+		LOGGER.info("Size of list to be written: " + listDataResponse.size());
+		int loopcounter = listDataResponse.size();
+		for(int i = 0; i<loopcounter; i++) {
 			dataResponse = (DataResponse) deframer.deframer(listDataResponse.remove(0));
 			offset = dataResponse.getOffset();
 			dataForFile = dataResponse.getData();
 			length = dataResponse.getLength();
+			if(offset < currentOffset) continue;
 			fileManager.writeFromPosition(offset, length, dataForFile);
+			LOGGER.info("Offset and currentOffset is: " + offset + " " + currentOffset + " loopcounter is: " + i);
 			packetTracker1[(int) ((offset - currentOffset)/4096)] = 1;
 			
 		}
@@ -170,15 +196,35 @@ public class DataConnection {
 		byte[] dataResponse = new byte[4249];
 		int loopcounter = (int) lengthForDataRequest/4096;
 		if(loopcounter == 0) loopcounter = 1;
+		//Test Code
+		Deframer deframer = new Deframer();
+		DataResponse drTest;
+		
+		//
 		DatagramPacket datagramPacket = new DatagramPacket(dataResponse, dataResponse.length);
 		List<byte[]> listDataResponse = new LinkedList<>();
+		LOGGER.info("Number of expected packets is : " + loopcounter);
 		for (int i = 0; i< loopcounter; i++){
 			try {
+				LOGGER.info("Waiting for DataResponse....");
+				datagramSocket.setSoTimeout(5);
 				datagramSocket.receive(datagramPacket);
+				//Test Code
+				LOGGER.info("Got DataResponse");
+				drTest = (DataResponse) deframer.deframer(dataResponse);
+				LOGGER.info("DRTEST: " + drTest.getOffset());
+				
+				//
 				listDataResponse.add(dataResponse);
-			} catch (IOException e) {
+				LOGGER.info("Received packet: " + i);
+				LOGGER.info("Size of the list is: " + listDataResponse.size());
+			} 
+			catch (IOException e) {
 				e.printStackTrace();
+				return listDataResponse;
+
 			}
+			
 			
 		}
 		return listDataResponse;
@@ -192,6 +238,8 @@ public class DataConnection {
 		DatagramPacket datagramPacket = new DatagramPacket(dataRequestPayload, dataRequestPayload.length, clientAddress, clientPort);
 		try {
 			datagramSocket.send(datagramPacket);
+			LOGGER.info("DataRequest sent: with Offset: " + offsetForDataRequest + " Length: " + lengthForDataRequest);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
